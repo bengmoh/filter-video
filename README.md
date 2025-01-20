@@ -142,7 +142,13 @@ We do not:
 
 ## Support
 
-- email: [elamine.beng@gmail.com](mailto:elamine.beng@gmail.com)
+- Email: [elamine.beng@gmail.com](mailto:elamine.beng@gmail.com)
 - Issues: [GitHub Issues](https://github.com/bengmoh/filter-video/issues)
 - Feedback: [Feedback Form](https://forms.gle/muGcKNufR2XzAnVV9)
 - Source: [GitHub Repository](https://github.com/bengmoh/filter-video)
+
+## Translation
+
+* [العربية](./README.ar.md)
+* [English](./README.md)
+* [Français](./README.fr.md)
