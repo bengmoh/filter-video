@@ -31,13 +31,7 @@
       font-weight: 600;
       color: var(--primary-color);
     }
-
-    #status {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 16px;
-    }
-
+    
     #shortcut-container {
       margin-bottom: 16px;
       font-size: 14px;
@@ -477,9 +471,7 @@
     </div>
   </div>
   
-  <div id="status" class="hidden">Checking video status...</div>
-  
-  <div id="shortcut-container" class="hidden">
+  <div id="shortcut-container">
     Press <span id="shortcut-key">,</span> to toggle 
     <div class="custom-select">
       <button id="filter-type" class="filter-select">blur</button>
@@ -490,7 +482,7 @@
     </div>
   </div>
   
-  <div id="intensity-container" class="hidden">
+  <div id="intensity-container">
     <label for="filter-intensity">Intensity</label>
     <input type="range" id="filter-intensity" min="1" max="100" value="50">
     <span id="intensity-value">50%</span>
