@@ -1,327 +1,127 @@
-/**
- * Popup Script: Manages the extension's popup UI and user interactions
- * Responsibilities:
- * - Displays and updates video detection status
- * - Handles shortcut key customization
- * - Controls filter intensity slider
- * - Manages extension enable/disable toggle
- */
+const $ = require("jquery");
+const { UPDATE_EXT_ICON } = require("../message_type");
+const { abbreviations } = require("../shortcut");
 
-// ===== Initialization =====
-// Query current tab for video status
-chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-  // ===== UI Elements =====
-  const status = document.getElementById('status');
-  const shortcutContainer = document.getElementById('shortcut-container');
-  const shortcutKey = document.getElementById('shortcut-key');
-  const intensityContainer = document.getElementById('intensity-container');
-  const intensitySlider = document.getElementById('filter-intensity');
-  const intensityValue = document.getElementById('intensity-value');
-  const enableSwitch = document.getElementById('enableSwitch');
-  const mainView = document.getElementById('mainView');
-  const donateView = document.getElementById('donateView');
-  const supportButton = document.getElementById('supportButton');
-  const backButton = document.querySelector('.back-button');
-  const filterSelect = document.getElementById('filter-type');
-  const selectItems = document.querySelector('.select-items');
-  const autoFilterSwitch = document.getElementById('autoFilterSwitch');
-  const settingsButton = document.getElementById('settingsButton');
-  const settingsView = document.getElementById('settingsView');
-  const settingsBackButton = document.querySelector('#settingsView .back-button');
-  
-  // ===== Event Handlers =====
-  // Add intensity slider handler
-  intensitySlider.addEventListener('input', () => {
-    const value = intensitySlider.value;
-    intensityValue.textContent = `${value}%`;
-    chrome.runtime.sendMessage({ 
-      type: 'UPDATE_FILTER_INTENSITY',
-      intensity: parseInt(value)
+// DOM elements
+const autoFilterSwitch = $("#autoFilterSwitch");
+const backButton = $(".back-button");
+const donateView = $("#donateView");
+const enableSwitch = $("#enableSwitch");
+const filterSelect = $("#filter-type");
+const intensitySlider = $("#filter-intensity");
+const intensityValue = $("#intensity-value");
+const mainView = $("#mainView");
+const selectItems = $(".select-items");
+const settingsBackButton = $("#settingsView .back-button");
+const settingsButton = $("#settingsButton");
+const settingsView = $("#settingsView");
+const shortcutKey = $("#shortcut-key");
+const supportButton = $("#supportButton");
+
+// Auto filter toggle
+autoFilterSwitch.on("change", (event) => {
+  chrome.storage.local.set({ autoFilter: event.target.checked });
+});
+
+// Update intensity slider value
+intensitySlider.on("input", () => {
+  const intensity = parseInt(intensitySlider.val());
+  intensityValue.text(`${intensity}%`);
+  chrome.storage.local.set({ intensity });
+});
+
+// Dropdown handling
+filterSelect.on("click", (event) => {
+  event.stopPropagation();
+  selectItems.toggleClass("hidden");
+});
+
+$(document).on("click", () => selectItems.addClass("hidden"));
+
+$(".select-item").on("click", function () {
+  const filterType = $(this).text();
+  filterSelect.text(filterType);
+  selectItems.addClass("hidden");
+  chrome.storage.local.set({ filterType });
+});
+
+$(".select-item").hover(
+  function () {
+    $(this).css({
+      background: "var(--primary-color)",
+      color: "var(--text-color)",
     });
-  });
-
-  // Add custom dropdown handlers
-  filterSelect.addEventListener('click', (e) => {
-    e.stopPropagation();
-    selectItems.classList.toggle('hidden');
-    // Hide the currently selected option
-    const currentValue = filterSelect.textContent;
-    document.querySelectorAll('.select-item').forEach(item => {
-      if (item.textContent === currentValue) {
-        item.style.display = 'none';
-      } else {
-        item.style.display = 'block';
-        // Reset background
-        item.style.background = 'var(--bg-color)';
-      }
+  },
+  function () {
+    $(this).css({
+      background: "var(--bg-color)",
+      color: "var(--text-color)",
     });
-  });
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', () => {
-    selectItems.classList.add('hidden');
-  });
-
-  // Handle option selection
-  document.querySelectorAll('.select-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const value = item.dataset.value;
-      filterSelect.textContent = item.textContent;
-      selectItems.classList.add('hidden');
-      // Reset display and background of all items
-      document.querySelectorAll('.select-item').forEach(i => {
-        i.style.display = 'block';
-        i.style.background = 'var(--bg-color)';
-      });
-      chrome.runtime.sendMessage({ 
-        type: 'UPDATE_FILTER_TYPE',
-        filterType: value
-      });
-    });
-
-    // Add hover event listeners
-    item.addEventListener('mouseenter', () => {
-      item.style.background = 'var(--primary-color)';
-      item.style.color = 'var(--text-color)';
-    });
-
-    item.addEventListener('mouseleave', () => {
-      item.style.background = 'var(--bg-color)';
-      item.style.color = 'var(--text-color)';
-    });
-  });
-
-  console.log('[Popup] Opened for tab:', tab?.id);
-  
-  if (!tab) {
-    status.textContent = 'Unable to determine video status';
-    return;
   }
+);
 
-  // ===== Message Listeners =====
-  // Listen for video status updates
-  chrome.runtime.onMessage.addListener((message) => {
-    console.log('[Popup] Received message:', message);
-    
-    if (message.tabId === tab.id) {
-      console.log('[Popup] Message matches current tab');
-      
-      if (message.type === 'VIDEO_DETECTED') {
-        console.log('[Popup] Updating status: Video detected');
-        status.textContent = 'Video detected in this page';
-        shortcutContainer.classList.remove('hidden');
-        intensityContainer.classList.remove('hidden');
-      } else if (message.type === 'VIDEO_STATUS_CHANGED' && !message.hasVideo) {
-        console.log('[Popup] Updating status: No video');
-        status.textContent = 'No video detected in this page';
-        shortcutContainer.classList.add('hidden');
-        intensityContainer.classList.add('hidden');
-      }
+// Enable/disable extension
+enableSwitch.on("change", (event) => {
+  const isExtActivated = event.target.checked;
+  chrome.storage.local.set({ isExtActivated });
+  chrome.runtime.sendMessage({ type: UPDATE_EXT_ICON, isExtActivated });
+});
+
+// Change shortcut
+shortcutKey.on("click", () => {
+  const newShortcutCombination = [];
+  shortcutKey.addClass("listening").text("Press keys...");
+
+  const handleKeyDown = (event) => {
+    if (event.key !== "Escape") {
+      newShortcutCombination.push(event.key.toLowerCase());
     }
-  });
+  };
 
-  // ===== Shortcut Key Management =====
-  // Get current shortcut from background
-  console.log('[Popup] Requesting current shortcut');
-  chrome.runtime.sendMessage({ type: 'GET_SHORTCUT' }, (response) => {
-    console.log('[Popup] Received shortcut response:', response);
-    
-    if (chrome.runtime.lastError) {
-      console.log('[Popup] Error getting shortcut:', chrome.runtime.lastError);
-      shortcutKey.textContent = ',';  // fallback to default
-      return;
-    }
-    if (response?.key) {
-      shortcutKey.textContent = response.key;
-    }
-  });
+  const handleKeyUp = () => {
+    const shortcut = newShortcutCombination
+      .map((key) => abbreviations[key] || key.slice(0, 3))
+      .join("+");
+    chrome.storage.local.set({ shortcut });
+    shortcutKey.text(shortcut).removeClass("listening");
+    $(document).off("keydown", handleKeyDown);
+    $(document).off("keyup", handleKeyUp);
+  };
 
-  // Handle shortcut key changes
-  shortcutKey.addEventListener('click', () => {
-    shortcutKey.classList.add('listening');
-    shortcutKey.textContent = 'key'; // Shorter message
+  $(document).on("keydown", handleKeyDown);
+  $(document).on("keyup", handleKeyUp);
+});
 
-    // One-time keyboard listener
-    const keyHandler = (e) => {
-      e.preventDefault();
-      
-      if (e.key === 'Escape') {
-        // Cancel shortcut change, revert to current shortcut
-        chrome.runtime.sendMessage({ type: 'GET_SHORTCUT' }, (response) => {
-          shortcutKey.textContent = response?.key || ',';
-        });
-        shortcutKey.classList.remove('listening');
-        document.removeEventListener('keydown', keyHandler);
-        return;
-      }
+// Navigation between views
+settingsButton.on("click", () => {
+  mainView.removeClass("active");
+  settingsView.addClass("active");
+});
 
-      const newKey = e.key.toLowerCase();
-      
-      // Update UI immediately
-      shortcutKey.textContent = newKey;
-      shortcutKey.classList.remove('listening');
+settingsBackButton.on("click", () => {
+  settingsView.removeClass("active");
+  mainView.addClass("active");
+});
 
-      // Inform background to update shortcut
-      chrome.runtime.sendMessage({ 
-        type: 'UPDATE_SHORTCUT',
-        key: newKey
-      }, () => {
-        if (chrome.runtime.lastError) {
-          console.log('[Popup] Error updating shortcut:', chrome.runtime.lastError);
-          // Get current shortcut from background if update fails
-          chrome.runtime.sendMessage({ type: 'GET_SHORTCUT' }, (response) => {
-            if (response?.key) {
-              shortcutKey.textContent = response.key;
-            } else {
-              shortcutKey.textContent = ',';  // fallback to default
-            }
-          });
-        }
-      });
+supportButton.on("click", () => {
+  mainView.removeClass("active");
+  donateView.addClass("active");
+});
 
-      // Remove listener
-      document.removeEventListener('keydown', keyHandler);
-    };
+backButton.on("click", () => {
+  donateView.removeClass("active");
+  mainView.addClass("active");
+});
 
-    document.addEventListener('keydown', keyHandler);
-  });
-
-  // ===== Initial State Setup =====
-  // Get initial status from background
-  console.log('[Popup] Requesting initial video status');
-  chrome.runtime.sendMessage({ 
-    type: 'GET_VIDEO_STATUS',
-    tabId: tab.id 
-  }, (response) => {
-    console.log('[Popup] Received status response:', response);
-    
-    if (chrome.runtime.lastError) {
-      console.log('[Popup] Error getting status:', chrome.runtime.lastError);
-      status.textContent = 'Unable to determine video status';
-      return;
-    }
-    
-    if (response?.hasVideo) {
-      console.log('[Popup] Initial status: Video detected');
-      status.textContent = 'Video detected in this page';
-      shortcutContainer.classList.remove('hidden');
-      intensityContainer.classList.remove('hidden');
-    } else {
-      console.log('[Popup] Initial status: No video');
-      status.textContent = 'No video detected in this page';
-      shortcutContainer.classList.add('hidden');
-      intensityContainer.classList.add('hidden');
-    }
-  });
-
-  // Get initial intensity value
-  chrome.runtime.sendMessage({ type: 'GET_FILTER_INTENSITY' }, (response) => {
-    if (response?.intensity) {
-      intensitySlider.value = response.intensity;
-      intensityValue.textContent = `${response.intensity}%`;
-    }
-  });
-
-  // Get initial auto-filter state
-  console.log('[Popup] Requesting initial auto-filter state');
-  chrome.runtime.sendMessage({ type: 'GET_FILTER_ON_DETECTION' }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error('[Popup] Error getting auto-filter state:', chrome.runtime.lastError.message);
-      return;
-    }
-    autoFilterSwitch.checked = response.autoFilter ?? false;
-  });
-
-  // ===== Extension State Management =====
-  // Load initial extension enabled state and show/hide UI accordingly
-  chrome.runtime.sendMessage({ type: 'GET_IS_ENABLED' }, (response) => {
-    enableSwitch.checked = response.isEnabled ?? true;
-    if (response.isEnabled) {
-      status.classList.remove('hidden');
-    }
-  });
-  
-  // Handle enable/disable switch
-  enableSwitch.addEventListener('change', (e) => {
-    console.log('[Popup] Switch toggled:', e.target.checked);
-    if (!e.target.checked) {
-      status.classList.add('hidden');
-      shortcutContainer.classList.add('hidden');
-      intensityContainer.classList.add('hidden');
-    } else {
-      status.classList.remove('hidden');
-    }
-    chrome.runtime.sendMessage({ 
-      type: 'TOGGLE_EXTENSION',
-      enabled: e.target.checked 
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('[Popup] Toggle error:', chrome.runtime.lastError);
-        return;
-      }
-      console.log('[Popup] Extension toggled response:', response);
-    });
-  });
-
-  // ===== Settings View Management =====
-  // Handle settings button click
-  settingsButton.addEventListener('click', () => {
-    console.log('[Popup] Opening settings view');
-    mainView.classList.remove('active');
-    settingsView.classList.add('active');
-    // Get current auto-filter state
-    chrome.runtime.sendMessage({ type: 'GET_FILTER_ON_DETECTION' }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('[Popup] Auto-filter toggle error:', chrome.runtime.lastError.message);
-        return;
-      }
-      autoFilterSwitch.checked = response.autoFilter ?? false;
-    });
-  });
-
-  // Handle settings back button
-  settingsBackButton.addEventListener('click', () => {
-    console.log('[Popup] Closing settings view');
-    settingsView.classList.remove('active');
-    mainView.classList.add('active');
-  });
-
-  // Handle auto-filter toggle
-  autoFilterSwitch.addEventListener('change', (e) => {
-    console.log('[Popup] Auto-filter toggled:', e.target.checked);
-    chrome.runtime.sendMessage({ 
-      type: 'TOGGLE_FILTER_ON_DETECTION',
-      enabled: e.target.checked 
-    }, () => {
-      if (chrome.runtime.lastError) {
-        console.error('[Popup] Auto-filter toggle error:', chrome.runtime.lastError.message);
-      }
-    });
-  });
-
-  // ===== Support View Management =====
-  // Handle support button click
-  supportButton.addEventListener('click', () => {
-    console.log('[Popup] Opening support view');
-    mainView.classList.remove('active');
-    donateView.classList.add('active');
-  });
-
-  // Handle back button click
-  backButton.addEventListener('click', () => {
-    console.log('[Popup] Closing support view');
-    donateView.classList.remove('active');
-    mainView.classList.add('active');
-  });
-
-  // Get initial filter type
-  chrome.runtime.sendMessage({ type: 'GET_FILTER_TYPE' }, (response) => {
-    if (response?.filterType) {
-      filterSelect.textContent = response.filterType;
-      document.querySelectorAll('.select-item').forEach(item => {
-        item.classList.toggle('selected', item.dataset.value === response.filterType);
-      });
-    }
-  });
-}); 
+// Load state from storage
+chrome.storage.local.get(
+  ["isExtActivated", "shortcut", "filterType", "autoFilter", "intensity"],
+  (data) => {
+    enableSwitch.prop("checked", data.isExtActivated || false);
+    shortcutKey.text(data.shortcut || "None");
+    filterSelect.text(data.filterType || "None");
+    autoFilterSwitch.prop("checked", data.autoFilter || false);
+    intensitySlider.val(data.intensity || 0);
+    intensityValue.text(`${data.intensity || 0}%`);
+  }
+);

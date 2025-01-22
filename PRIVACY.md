@@ -26,14 +26,12 @@ These settings are stored locally in your browser using Chrome's storage API and
 
 The extension requires certain permissions to function:
 
-- tabs: To detect and filter videos in your active tab
-- webNavigation: To maintain filter state during navigation
+- tabs, activeTab: To detect and filter videos in your active tab
 - storage: To save your preferences locally
-- alarms: To maintain extension functionality during long sessions
 
 ## Content Script
 
-- Content script runs on all pages to handle supported platforms (video detection) and non-supported platforms (iframe detection as a fallback)
+- Content script runs on all pages to handle videos and iframes detection.
 
 ## Third-Party Access
 
