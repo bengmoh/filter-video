@@ -1,568 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <style>
-    :root {
-      --primary-color: #2196F3;
-      --bg-color: #1a1a1a;
-      --text-color: #ffffff;
-      --secondary-bg: #2d2d2d;
-      --hover-color: #3a3a3a;
-    }
-    
-    body {
-      width: 280px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="popup.css" rel="stylesheet" />
+    <title>FilterVideo</title>
+  </head>
+  <body>
+    <!-- Main View -->
+    <div id="mainView" class="view active">
+      <div class="header">
+        <div class="brand">FilterVideo</div>
+        <div class="header-controls">
+          <button id="settingsButton" class="icon-button">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+              />
+            </svg>
+          </button>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" id="enableSwitch" />
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
+      <div id="status" class="hidden">Checking video status...</div>
 
-    .brand {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
+      <div id="shortcut-container" class="hidden">
+        Press <span id="shortcut-key">,</span> to toggle
+        <div class="custom-select">
+          <button id="filter-type" class="filter-select">blur</button>
+          <div class="select-items hidden">
+            <div class="select-item" data-value="blur">blur</div>
+            <div class="select-item" data-value="opacity">opacity</div>
+          </div>
+        </div>
+      </div>
 
-    #status {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 16px;
-    }
+      <div id="intensity-container" class="hidden">
+        <label for="filter-intensity">Intensity</label>
+        <input
+          type="range"
+          id="filter-intensity"
+          min="1"
+          max="100"
+          value="50"
+        />
+        <span id="intensity-value">50%</span>
+      </div>
 
-    #shortcut-container {
-      margin-bottom: 16px;
-      font-size: 14px;
-    }
+      <div class="footer">
+        <a href="https://forms.gle/muGcKNufR2XzAnVV9" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"
+            />
+          </svg>
+          Feedback
+        </a>
+        <a href="#" id="supportButton">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"
+            />
+          </svg>
+          Support
+        </a>
+        <a href="https://github.com/bengmoh/filter-video" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+            />
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </div>
 
-    #shortcut-key {
-      display: inline-block;
-      padding: 4px 8px;
-      border: 1px solid var(--primary-color);
-      border-radius: 4px;
-      font-family: 'SF Mono', 'Courier New', monospace;
-      cursor: pointer;
-      background: var(--secondary-bg);
-      color: var(--primary-color);
-      transition: all 0.2s ease;
-    }
-
-    #shortcut-key:hover {
-      background: var(--hover-color);
-    }
-
-    #shortcut-key.listening {
-      background: var(--primary-color);
-      color: var(--text-color);
-      border-color: var(--primary-color);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4);
-      }
-      70% {
-        box-shadow: 0 0 0 6px rgba(33, 150, 243, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
-      }
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    #intensity-container {
-      background: var(--secondary-bg);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
-    #intensity-container label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    #filter-intensity {
-      width: 100%;
-      margin: 8px 0;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      background: var(--primary-color);
-      border-radius: 2px;
-      outline: none;
-    }
-
-    #filter-intensity::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--text-color);
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    #filter-intensity::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-    }
-
-    #intensity-value {
-      font-size: 12px;
-      color: var(--text-color);
-      opacity: 0.8;
-    }
-
-    .switch-container {
-      display: flex;
-      align-items: center;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 40px;
-      height: 20px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--secondary-bg);
-      transition: .3s;
-      border-radius: 20px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: '';
-      height: 16px;
-      width: 16px;
-      left: 2px;
-      bottom: 2px;
-      background-color: var(--text-color);
-      transition: .3s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: var(--primary-color);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
-    .footer {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--secondary-bg);
-      font-size: 12px;
-      gap: 8px;
-    }
-
-    .footer a:first-child {
-      justify-self: start;
-    }
-
-    .footer a:nth-child(2) {
-      justify-self: center;
-    }
-
-    .footer a:last-child {
-      justify-self: end;
-    }
-
-    .footer a {
-      color: var(--text-color);
-      text-decoration: none;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .footer a:hover {
-      opacity: 1;
-      color: var(--primary-color);
-    }
-
-    .footer svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .view {
-      display: none;
-    }
-
-    .view.active {
-      display: block;
-    }
-
-    .back-button {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-color);
-      background: none;
-      border: none;
-      padding: 8px 0;
-      cursor: pointer;
-      font-size: 14px;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-    }
-
-    .back-button:hover {
-      opacity: 1;
-      color: var(--primary-color);
-    }
-
-    .donate-options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .donate-button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: var(--secondary-bg);
-      border: none;
-      border-radius: 8px;
-      color: var(--text-color);
-      cursor: pointer;
-      transition: background 0.2s ease;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .donate-button:hover {
-      background: var(--hover-color);
-    }
-
-    .donate-button svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .custom-select {
-      position: relative;
-      display: inline-block;
-    }
-
-    .filter-select {
-      display: inline-block;
-      padding: 2px 24px 2px 8px;
-      border: 1px solid var(--primary-color);
-      border-radius: 4px;
-      font-family: inherit;
-      font-size: inherit;
-      font-weight: inherit;
-      cursor: pointer;
-      background: var(--secondary-bg);
-      color: var(--primary-color);
-      transition: all 0.2s ease;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196F3'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 4px center;
-      background-size: 16px;
-      vertical-align: middle;
-      line-height: 1.4;
-      border: 1px solid var(--primary-color);
-      appearance: none;
-      -webkit-appearance: none;
-      outline: none;
-      width: 90px;
-      text-align: left;
-    }
-
-    .filter-select:hover {
-      background-color: var(--hover-color);
-    }
-
-    .select-items {
-      position: absolute;
-      top: calc(100% + 2px);
-      left: 0;
-      width: 85px;
-      z-index: 99;
-      background: var(--bg-color);
-      border: 1px solid var(--primary-color);
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      padding: 2px;
-    }
-
-    .select-item {
-      padding: 4px 8px;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: inherit;
-      transition: all 0.2s ease;
-      color: var(--text-color);
-      white-space: nowrap;
-      font-size: 13px;
-      border-radius: 2px;
-      background: var(--bg-color);
-    }
-
-    .select-item:hover {
-      background: var(--primary-color);
-      color: var(--text-color);
-    }
-
-    .select-item.selected {
-      background: var(--primary-color);
-      color: var(--text-color);
-    }
-
-    #shortcut-container {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .icon-button {
-      background: none;
-      border: none;
-      padding: 4px;
-      cursor: pointer;
-      color: var(--text-color);
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .icon-button:hover {
-      opacity: 1;
-      color: var(--primary-color);
-    }
-
-    .icon-button svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .settings-content {
-      margin-top: 16px;
-    }
-
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      font-size: 14px;
-      color: var(--text-color);
-    }
-
-    .setting-item span {
-      margin-right: 12px;
-      line-height: 1.4;
-    }
-
-    .checkbox {
-      position: relative;
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-    }
-
-    .checkbox input {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-      height: 0;
-      width: 0;
-    }
-
-    .checkmark {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 18px;
-      width: 18px;
-      background-color: var(--secondary-bg);
-      border-radius: 4px;
-      transition: all 0.2s ease;
-    }
-
-    .checkbox:hover input ~ .checkmark {
-      background-color: var(--hover-color);
-    }
-
-    .checkbox input:checked ~ .checkmark {
-      background-color: var(--primary-color);
-    }
-
-    .checkmark:after {
-      content: "";
-      position: absolute;
-      display: none;
-      left: 6px;
-      top: 3px;
-      width: 4px;
-      height: 8px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
-
-    .checkbox input:checked ~ .checkmark:after {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <!-- Main View -->
-<div id="mainView" class="view active">
-  <div class="header">
-    <div class="brand">FilterVideo</div>
-    <div class="header-controls">
-      <button id="settingsButton" class="icon-button">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+    <!-- Donate View -->
+    <div id="donateView" class="view">
+      <button class="back-button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path
+            d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+          />
         </svg>
+        Back
       </button>
-      <div class="switch-container">
-        <label class="switch">
-          <input type="checkbox" id="enableSwitch">
-          <span class="slider round"></span>
-        </label>
+
+      <div class="donate-options">
+        <a
+          href="https://www.buymeacoffee.com/filtervideo"
+          target="_blank"
+          class="donate-button"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"
+            />
+          </svg>
+          Buy Me a Coffee
+        </a>
+        <a
+          href="https://paypal.me/filtervideo"
+          target="_blank"
+          class="donate-button"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.75-2.203 8.796-6.502zm-2.96-5.09c.762.868.983 1.81.752 3.285-.019.123-.04.24-.062.36-.735 3.773-3.089 5.446-6.956 5.446H8.957c-.63 0-1.174.414-1.354 1.002l-.014-.002-.93 5.894H3.121a.051.051 0 0 1-.05-.06l2.598-16.51A.95.95 0 0 1 6.607 2h5.976c2.183 0 3.716.469 4.523 1.388z"
+            />
+          </svg>
+          PayPal
+        </a>
       </div>
     </div>
-  </div>
-  
-  <div id="status" class="hidden">Checking video status...</div>
-  
-  <div id="shortcut-container" class="hidden">
-    Press <span id="shortcut-key">,</span> to toggle 
-    <div class="custom-select">
-      <button id="filter-type" class="filter-select">blur</button>
-      <div class="select-items hidden">
-        <div class="select-item" data-value="blur">blur</div>
-        <div class="select-item" data-value="opacity">opacity</div>
+
+    <!-- Settings View -->
+    <div id="settingsView" class="view">
+      <button class="back-button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path
+            d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+          />
+        </svg>
+        Back
+      </button>
+
+      <div class="settings-content">
+        <div class="setting-item">
+          <span>Auto-filter on detection</span>
+          <label class="checkbox">
+            <input type="checkbox" id="autoFilterSwitch" />
+            <span class="checkmark"></span>
+          </label>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div id="intensity-container" class="hidden">
-    <label for="filter-intensity">Intensity</label>
-    <input type="range" id="filter-intensity" min="1" max="100" value="50">
-    <span id="intensity-value">50%</span>
-  </div>
 
-  <div class="footer">
-    <a href="https://forms.gle/muGcKNufR2XzAnVV9" target="_blank">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
-      </svg>
-      Feedback
-    </a>
-    <a href="#" id="supportButton">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/>
-      </svg>
-      Support
-    </a>
-    <a href="https://github.com/bengmoh/filter-video" target="_blank">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-      </svg>
-      GitHub
-    </a>
-  </div>
-</div>
+    <script src="popup.js"></script>
+  </body>
+</html>
 
-<!-- Donate View -->
-<div id="donateView" class="view">
-  <button class="back-button">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-    </svg>
-    Back
-  </button>
-  
-  <div class="donate-options">
-    <a href="https://www.buymeacoffee.com/filtervideo" target="_blank" class="donate-button">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/>
-      </svg>
-      Buy Me a Coffee
-    </a>
-    <a href="https://paypal.me/filtervideo" target="_blank" class="donate-button">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.75-2.203 8.796-6.502zm-2.96-5.09c.762.868.983 1.81.752 3.285-.019.123-.04.24-.062.36-.735 3.773-3.089 5.446-6.956 5.446H8.957c-.63 0-1.174.414-1.354 1.002l-.014-.002-.93 5.894H3.121a.051.051 0 0 1-.05-.06l2.598-16.51A.95.95 0 0 1 6.607 2h5.976c2.183 0 3.716.469 4.523 1.388z"/>
-      </svg>
-      PayPal
-    </a>
-  </div>
-</div>
-
-<!-- Settings View -->
-<div id="settingsView" class="view">
-  <button class="back-button">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-    </svg>
-    Back
-  </button>
-  
-  <div class="settings-content">
-    <div class="setting-item">
-      <span>Auto-filter on detection</span>
-      <label class="checkbox">
-        <input type="checkbox" id="autoFilterSwitch">
-        <span class="checkmark"></span>
-      </label>
-    </div>
-  </div>
-</div>
-
-  <script src="popup.js"></script>
-</body>
-</html> 
