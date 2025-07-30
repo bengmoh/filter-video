@@ -32,6 +32,14 @@ Web extension that detects the video, and allows you to apply the filter (blur/o
   - Improved iframe detection
   - Support for "Open in New Tab" videos (right click on video and select "Open in New Tab" is available for some platforms like Coursera lectures)
 
+
+
+### NEW in v1.2.4:
+
+  - Adding the Arabic language in the extension
+  - Improving the interface better
+
+
 ## Installation
 
 ### For Chrome
@@ -178,3 +186,7 @@ We do not:
 - Zeteo news website
 - "Open in New Tab" videos
 - Other platforms via iframe detection
+- 
+
+### It has been contributed by
+<p align="center"> <a href="https://github.com/mohammed-ayoub-javascript"> <img src="https://avatars.githubusercontent.com/u/113200512?v=4" width="100" height="100" style="border-radius: 50%;" alt="Mohammed Ayoub GitHub"/> <br/> <b>Mohammed Ayoub</b> </a> </p>

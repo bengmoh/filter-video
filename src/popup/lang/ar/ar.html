@@ -1,0 +1,157 @@
+<!DOCTYPE html >
+<html dir="rtl">
+  <head>
+    <meta charset="UTF-8">
+    <title>FilterVideo Popup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+
+    <!-- Arabic Font -->
+
+     <style>
+        * {
+  font-family: "Cairo", sans-serif;
+  font-optical-sizing: auto;
+  font-weight:400;
+  font-style: normal;
+  font-variation-settings:
+    "slnt" 0;
+}
+
+     </style>
+  </head>
+  <body>
+    <!-- Main View -->
+    <div id="mainView" class="view active">
+      <div class="header">
+        <div class="brand">فلترة المقاطع</div>
+        <div class="header-controls">
+          <button id="settingsButton" class="icon-button">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </button>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" id="enableSwitch">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div id="status" class="hidden">التحقق من حالة المقطع...</div>
+      
+      <div id="shortcut-container" class="hidden">
+        اضغط <span id="shortcut-key">,</span> للتغير الى
+        <div class="custom-select">
+          <button id="filter-type" class="filter-select">تشويش</button>
+          <div class="select-items hidden">
+            <div class="select-item" data-value="blur">تشويش</div>
+            <div class="select-item" data-value="opacity">شفافية</div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="intensity-container" class="hidden">
+        <label for="filter-intensity">شدة</label>
+        <input type="range" id="filter-intensity" min="1" max="100" value="50">
+        <span id="intensity-value">50%</span>
+      </div>
+
+      <div class="footer">
+        <a href="https://forms.gle/muGcKNufR2XzAnVV9" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
+          </svg>
+          Feedback
+        </a>
+        <a href="#" id="supportButton">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/>
+          </svg>
+          الدعم
+        </a>
+        <a href="https://github.com/bengmoh/filter-video" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- Donate View -->
+    <div id="donateView" class="view">
+      <button class="back-button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        الرجوع
+      </button>
+      
+      <div class="donate-options">
+        <a href="https://www.buymeacoffee.com/filtervideo" target="_blank" class="donate-button">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/>
+          </svg>
+          Buy Me a Coffee
+        </a>
+        <a href="https://paypal.me/filtervideo" target="_blank" class="donate-button">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.75-2.203 8.796-6.502zm-2.96-5.09c.762.868.983 1.81.752 3.285-.019.123-.04.24-.062.36-.735 3.773-3.089 5.446-6.956 5.446H8.957c-.63 0-1.174.414-1.354 1.002l-.014-.002-.93 5.894H3.121a.051.051 0 0 1-.05-.06l2.598-16.51A.95.95 0 0 1 6.607 2h5.976c2.183 0 3.716.469 4.523 1.388z"/>
+          </svg>
+          PayPal
+        </a>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settingsView" class="view">
+      <button class="back-button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        الرجوع
+      </button>
+      
+      <div class="settings-content">
+        <div class="setting-item">
+          <span>تصفية تلقائية عند الكشف</span>
+          <label class="checkbox">
+            <input type="checkbox" id="autoFilterSwitch">
+            <span class="checkmark"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>تخطيط لوحة المفاتيح</span>
+          <div class="custom-select">
+            <button id="keyboard-layout" class="filter-select">QWERTY</button>
+            <div class="select-items hidden">
+              <div class="select-item" data-value="AZERTY">AZERTY</div>
+              <div class="select-item" data-value="QWERTY">QWERTY</div>
+            </div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <span>زر إعادة الضبط السريع</span>
+          <span id="reset-key" class="shortcut-key">r</span>
+        </div>
+        <div class="setting-item">
+            <span>langage</span>
+            <a href="./ar.html">
+              <span id="reset-key" class="shortcut-key">Ar</span>
+            </a>
+            <a href="../../popup.html">
+              <span id="reset-key" class="shortcut-key">En</span>
+            </a>
+          </div>
+      </div>
+    </div>
+
+    <script src="../../popup.js"></script>
+  </body>
+</html> 
+
+
