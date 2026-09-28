@@ -167,7 +167,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Special handling for TOGGLE_EXTENSION as it comes from popup
   if (message.type === 'TOGGLE_EXTENSION') {
-    isExtensionEnabled = message.enabled;
+    isExtensionEnabled = message.enabled === true;
     chrome.storage.local.set({ isEnabled: isExtensionEnabled });
     console.log('[Background] Extension toggled to:', isExtensionEnabled);
     
@@ -220,7 +220,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'TOGGLE_FILTER_ON_DETECTION') {
-    filterOnDetection = message.enabled;
+    filterOnDetection = message.enabled === true;
     chrome.storage.local.set({ filterOnDetection: filterOnDetection });
     console.log('[Background] Filter on detection toggled to:', filterOnDetection);
     return true;
@@ -277,6 +277,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case 'UPDATE_SHORTCUT':
+      if (typeof message.key !== 'string' || !message.key || message.key.length > 20) {
+        console.log('[Background] Ignoring invalid shortcut key:', message.key);
+        break;
+      }
       console.log('[Background] Updating shortcut key to:', message.key);
       filterShortcut = message.key;
       // Save to storage
@@ -309,9 +313,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case 'UPDATE_FILTER_INTENSITY':
       console.log('[Background] Updating filter intensity to:', message.intensity);
-      filterIntensity = message.intensity;
+      // Clamp to the slider's valid range before it reaches any style sink
+      filterIntensity = Math.min(100, Math.max(1, Number(message.intensity) || 50));
       // Save to storage
-      chrome.storage.local.set({ filterIntensity: message.intensity });
+      chrome.storage.local.set({ filterIntensity: filterIntensity });
       // Update any active filtered videos
       chrome.tabs.query({}, (tabs) => {
         tabs.forEach(tab => {
@@ -333,6 +338,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;  // Keep message channel open
 
     case 'UPDATE_FILTER_TYPE':
+      if (message.filterType !== 'blur' && message.filterType !== 'opacity') {
+        console.log('[Background] Ignoring invalid filter type:', message.filterType);
+        break;
+      }
       console.log('[Background] Updating filter type to:', message.filterType);
       filterType = message.filterType;
       // Save to storage
@@ -359,6 +368,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'POPUP_UPDATE_KEYBOARD_LAYOUT':
+      if (message.layout !== 'QWERTY' && message.layout !== 'AZERTY') {
+        console.log('[Background] Ignoring invalid keyboard layout:', message.layout);
+        break;
+      }
       console.log('[Background] Updating keyboard layout to:', message.layout);
       keyboardLayout = message.layout;
       chrome.storage.local.set({ keyboardLayout: message.layout });
@@ -379,6 +392,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
 
     case 'UPDATE_RESET_KEY':
+      if (typeof message.key !== 'string' || !message.key || message.key.length > 20) {
+        console.log('[Background] Ignoring invalid reset key:', message.key);
+        break;
+      }
       console.log('[Background] Updating reset key to:', message.key);
       resetKey = message.key;
       chrome.storage.local.set({ resetKey: message.key });

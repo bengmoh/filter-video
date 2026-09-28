@@ -1,7 +1,18 @@
 // Mock chrome API
 global.chrome = {
   runtime: {
-    sendMessage: jest.fn(),
+    // Answer callback-style queries so content.js state (shortcut, layout,
+    // enabled) initializes the way it does against the real background script
+    sendMessage: jest.fn((message, callback) => {
+      if (typeof callback !== 'function') return;
+      const responses = {
+        GET_IS_ENABLED: { isEnabled: true },
+        GET_SHORTCUT: { key: ',' },
+        CONTENT_GET_KEYBOARD_LAYOUT: { layout: 'QWERTY' },
+        GET_RESET_KEY: { key: 'r' }
+      };
+      callback(responses[message.type] || {});
+    }),
     onMessage: {
       addListener: jest.fn((listener) => {
         chrome.runtime.onMessage.listener = listener;  // Store the listener
@@ -33,4 +44,4 @@ window.location = new URL('https://www.youtube.com');
 // Reset all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
-}); 
+});
