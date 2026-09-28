@@ -167,7 +167,10 @@ function checkForVideo() {
   
   videoCheckRunning = true;
   console.log('[Content] Checking for video on:', window.location.href);
-  const video = getVideoElement(); 
+  // Re-derive the handling type from the live URL: SPA navigations can
+  // change it between MutationObserver callbacks, leaving it stale
+  currentHandling = isVideoPlayerURL(location.href);
+  const video = getVideoElement();
   
   if (video) {
     if (video === videoElement && currentHandling !== 1 && currentHandling !== 6) {

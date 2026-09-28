@@ -41,7 +41,18 @@ global.chrome = {
 delete window.location;
 window.location = new URL('https://www.youtube.com');
 
+// Controllable clock so tests can step past the 500ms detection cooldown
+const realDateNow = Date.now.bind(Date);
+let mockNow = realDateNow();
+global.advanceMockTime = (ms) => { mockNow += ms; };
+
 // Reset all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
+  mockNow = realDateNow();
+  Date.now = jest.fn(() => mockNow);
+});
+
+afterAll(() => {
+  Date.now = realDateNow;
 });
