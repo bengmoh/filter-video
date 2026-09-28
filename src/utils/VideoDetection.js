@@ -1,77 +1,69 @@
 // ===== Video Detection Utils =====
 
-const SUPPORTED_PLATFORMS = ['www.youtube.com', 'www.netflix.com', 'www.primevideo.com', 'www.disneyplus.com', 'www.instagram.com', 'www.coursera.org', 'zeteo.com'];
+const SUPPORTED_PLATFORMS = ['youtube.com', 'netflix.com', 'primevideo.com', 'disneyplus.com', 'instagram.com', 'tiktok.com', 'coursera.org', 'zeteo.com'];
 
-const firstHandlingCheckers = [youtube, netflix, disneyplus, coursera, zeteo];
-const secondHandlingCheckers = [primevideo];
+/**
+ * Check if a hostname is a domain or one of its subdomains.
+ * Substring checks like url.includes('youtube.com') are spoofable
+ * (e.g. https://evil.com/youtube.com/watch), so trust decisions must
+ * be based on the parsed hostname only.
+ */
+function matchesDomain(hostname, domain) {
+    return hostname === domain || hostname.endsWith('.' + domain);
+}
 
 /**
  * Check if the URL is a video player URL
  * @param {string} url - The URL to check
- * @returns {number} - 0: no video player, 1: first handling platform, 2: second handling platform, 3: tiktok (special handling), 4: instagram reels (special handling), 5: instagram feed (special handling), -1: iframe
+ * @returns {number} - 0: no video player, 1: first handling platform, 2: second handling platform, 3: tiktok (special handling), 4: instagram reels (special handling), 5: instagram feed (special handling), 6: tiktok feed (special handling), -1: iframe
  */
 export function isVideoPlayerURL(url) {
-    
-    if (firstHandlingCheckers.some(checker => checker(url))) return 1;
-    
-    if (secondHandlingCheckers.some(checker => checker(url))) return 2;
-    
-    // Special case for TikTok
-    if (tiktokNoFeed(url)) return 3;
-    
-    // Special case for Instagram Reels
-    if (instagramReels(url)) return 4;
-    
-    // get domain name
-    url = url.split('/')[2];
+    if (!url) return 0;
 
-    // Special case for Instagram Feed
-    if (instagramFeed(url)) return 5;
+    let parsed;
+    try {
+        parsed = new URL(url);
+    } catch (e) {
+        return 0;
+    }
+    // Only http(s) pages can host videos we handle
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return 0;
 
-    // Special case for TikTok Feed
-    if (tiktokFeed(url)) return 6;
+    const hostname = parsed.hostname;
+    const pathname = parsed.pathname;
 
-    console.log(url);
-    return SUPPORTED_PLATFORMS.includes(url) ? 0 : -1; // If the domain is in the supported platforms, return 0 (no video player), else return -1 (iframe)
-}
+    if (matchesDomain(hostname, 'youtube.com')) {
+        return (pathname.startsWith('/watch') || pathname.startsWith('/shorts')) ? 1 : 0;
+    }
 
+    if (matchesDomain(hostname, 'netflix.com')) {
+        // miniDpPlayButton marks the browse-page mini player, not a watch page
+        return (pathname.startsWith('/watch') && !parsed.search.includes('miniDpPlayButton')) ? 1 : 0;
+    }
 
-function youtube(url) {
-    return url.includes('youtube.com/watch') || url.includes('youtube.com/shorts');
-}
+    if (matchesDomain(hostname, 'disneyplus.com')) {
+        return pathname.includes('play') ? 1 : 0;
+    }
 
-function netflix(url) {
-    return url.includes('netflix.com/watch');
-}
+    if (matchesDomain(hostname, 'coursera.org')) {
+        return pathname.includes('lecture') ? 1 : 0;
+    }
 
-function disneyplus(url) {
-    return url.includes('disneyplus.com') && url.includes('play');
-}
+    if (matchesDomain(hostname, 'zeteo.com')) {
+        return pathname.startsWith('/p') ? 1 : 0;
+    }
 
-function coursera(url) {
-    return url.includes('coursera.org') && url.includes('lecture');
-}
+    if (matchesDomain(hostname, 'primevideo.com')) {
+        return pathname.includes('detail') ? 2 : 0;
+    }
 
-function zeteo(url) {
-    return url.includes('zeteo.com/p');
-}
+    if (matchesDomain(hostname, 'tiktok.com')) {
+        return pathname.startsWith('/@') ? 3 : 6;
+    }
 
-function tiktokNoFeed(url) {
-    return url.includes('tiktok.com/@');
-}
+    if (matchesDomain(hostname, 'instagram.com')) {
+        return pathname.startsWith('/reels') ? 4 : 5;
+    }
 
-function primevideo(url) {
-    return url.includes('primevideo.com') && url.includes('detail');
-}
-
-function instagramReels(url) {
-    return url.includes('instagram.com/reels');
-}
-
-function instagramFeed(url) {
-    return url === 'www.instagram.com';
-}
-
-function tiktokFeed(url) {
-    return url === 'www.tiktok.com';
+    return SUPPORTED_PLATFORMS.some(domain => matchesDomain(hostname, domain)) ? 0 : -1; // -1: iframe fallback
 }

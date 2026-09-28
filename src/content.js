@@ -46,6 +46,7 @@ chrome.runtime.sendMessage({ type: 'GET_IS_ENABLED' }, (response) => {
   
   chrome.runtime.sendMessage({ type: 'GET_RESET_KEY' }, (resetResponse) => {
     currentResetKey = resetResponse?.key;
+    equivalentResetKey = currentResetKey ? getEquivalentKey(currentResetKey, currentLayout) : null;
   });
   
   if (isExtensionEnabled && currentHandling && currentHandling !== 5 && currentHandling !== 6) {
@@ -73,7 +74,7 @@ function getVideoElement() {
       }
       // Otherwise, look for iframe
       const iframes = document.querySelectorAll('iframe[src][allowfullscreen]');
-      if (location.href.includes('youglish.com')) return iframes[0];
+      if (location.hostname === 'youglish.com' || location.hostname.endsWith('.youglish.com')) return iframes[0];
       for (const iframe of iframes) {
         if (!iframe.src.includes('youtube.com')) {
           return iframe;
@@ -235,30 +236,43 @@ function checkForVideo() {
 // ===== Filter Management =====
 function attachFilterToggle(videoElement, key = null) {
   if (filterListenerAttached) return;
-  
-  const shortcutKey = (key || currentShortcutKey).toLowerCase();
+
+  // Shortcut may not have arrived from the background yet (async race)
+  const rawKey = key || currentShortcutKey;
+  if (typeof rawKey !== 'string' || !rawKey) {
+    console.log('[Content] No shortcut key available yet, skipping filter toggle attach');
+    return;
+  }
+  const shortcutKey = rawKey.toLowerCase();
   equivalentKey = getEquivalentKey(shortcutKey, currentLayout);
-  equivalentResetKey = getEquivalentKey(currentResetKey, currentLayout);
+  equivalentResetKey = currentResetKey ? getEquivalentKey(currentResetKey, currentLayout) : null;
 
   currentKeydownHandler = (e) => {
-    if (isExtensionEnabled && (e.key.toLowerCase() === shortcutKey || e.key.toLowerCase() === equivalentKey)) {
+    // Synthetic events may lack a key property
+    if (typeof e.key !== 'string') return;
+    const pressedKey = e.key.toLowerCase();
+    if (isExtensionEnabled && (pressedKey === shortcutKey || pressedKey === equivalentKey)) {
       e.stopPropagation();
       chrome.runtime.sendMessage({ type: 'TOGGLE_FILTER' });
     }
   };
-  
+
   console.log('[Content] Attaching filter toggle with shortcut:', shortcutKey);
   document.addEventListener('keydown', currentKeydownHandler);
   filterListenerAttached = true;
   console.log('[Content] Attached filter toggle with shortcut:', shortcutKey);
-
-  document.addEventListener('keydown', (e) => {
-    // Only handle reset key if extension is enabled and key is set
-    if (isExtensionEnabled && (e.key.toLowerCase() === currentResetKey || e.key.toLowerCase() === equivalentResetKey)) {
-      chrome.runtime.sendMessage({ type: 'QUICK_RESET' });
-    }
-  });
 }
+
+// Single reset-key listener for the page lifetime: re-adding an anonymous
+// listener on every attachFilterToggle call leaked listeners and caused
+// duplicate QUICK_RESET messages.
+document.addEventListener('keydown', (e) => {
+  if (typeof e.key !== 'string' || !currentResetKey) return;
+  const pressedKey = e.key.toLowerCase();
+  if (isExtensionEnabled && (pressedKey === currentResetKey || pressedKey === equivalentResetKey)) {
+    chrome.runtime.sendMessage({ type: 'QUICK_RESET' });
+  }
+});
 
 // ===== Message Handlers =====
 chrome.runtime.onMessage.addListener((message) => {
@@ -346,6 +360,7 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'CONTENT_UPDATE_KEYBOARD_LAYOUT') {
     console.log('[Content] Updating keyboard layout to:', message.layout);
     currentLayout = message.layout;
+    equivalentResetKey = currentResetKey ? getEquivalentKey(currentResetKey, currentLayout) : null;
     // If we have an active video and filter, update the key mapping
     if (videoElement && filterListenerAttached) {
       // Remove old listener
@@ -359,6 +374,7 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'UPDATE_RESET_KEY') {
     console.log('[Content] Updating reset key to:', message.key);
     currentResetKey = message.key;  // Will be null when extension disabled
+    equivalentResetKey = currentResetKey ? getEquivalentKey(currentResetKey, currentLayout) : null;
   }
 
   if (message.type === 'QUICK_RESET_STATE') {
@@ -427,8 +443,17 @@ async function startInstagramFeedObserver() {
   // Setup observer for Instagram feed scrolling
   console.log('[Content] Setting up Instagram feed observer');
   let article, scrollContainer;
-  while (!article) {
+  // Poll with a delay and a cap: a synchronous while-loop here would
+  // block the page's main thread forever if no <article> ever appears
+  for (let attempts = 0; !article && attempts < 600; attempts++) {
     article = document.querySelector('article');
+    if (!article) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  if (!article) {
+    console.log('[Content] No Instagram article found, giving up on feed observer');
+    return;
   }
   scrollContainer = article.parentElement;
   if (scrollContainer) {
@@ -450,13 +475,17 @@ async function startTiktokFeedObserver() {
   console.log('[Content] Setting up TikTok feed observer');
   
   let columnListContainer;
-  while (!columnListContainer) {
+  for (let attempts = 0; !columnListContainer && attempts < 600; attempts++) {
     columnListContainer = document.querySelector('#column-list-container');
     if (!columnListContainer) {
       await new Promise(resolve => setTimeout(resolve, 100)); // Small delay before retrying
     }
   }
-  
+  if (!columnListContainer) {
+    console.log('[Content] No TikTok column-list-container found, giving up on feed observer');
+    return;
+  }
+
   console.log('[Content] Found TikTok column-list-container');
   
   tiktokFeedObserver = new MutationObserver(async () => {
