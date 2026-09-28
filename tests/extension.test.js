@@ -94,10 +94,8 @@ describe('Video Detection Extension', () => {
       
       // Simulate ',' keypress
       document.dispatchEvent(new KeyboardEvent('keydown', { key: ',' }));
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ 
-        type: 'TOGGLE_FILTER',
-        type: 'VIDEO_DETECTED'
-      });
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'VIDEO_DETECTED' });
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'TOGGLE_FILTER' });
     });
 
     test('should apply blur filter state from background', () => {
@@ -159,8 +157,10 @@ describe('Video Detection Extension', () => {
       checkForVideo();
       
       // Simulate ',' keypress - should only trigger once
+      chrome.runtime.sendMessage.mockClear();
       document.dispatchEvent(new KeyboardEvent('keydown', { key: ',' }));
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledTimes(2); // VIDEO_DETECTED + TOGGLE_FILTER
+      const toggleCalls = chrome.runtime.sendMessage.mock.calls.filter(([m]) => m.type === 'TOGGLE_FILTER');
+      expect(toggleCalls).toHaveLength(1);
       
       // Restore original Date.now
       global.Date.now = realDateNow;
