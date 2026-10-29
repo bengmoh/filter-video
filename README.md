@@ -61,7 +61,7 @@ Web extension that detects the video, and allows you to apply the filter (blur/o
 #### From Source
 
 1. Clone this repository
-2. Run `mv firefox/manifest.json src/manifest.json` to replace chrome manifest with firefox manifest
+2. Run `cp firefox/manifest.json src/manifest.json` to replace chrome manifest with firefox manifest
 3. Run `npm install` then `npm run dev` in the root directory
 4. Open Firefox and navigate to `about:debugging`
 5. Click "This Firefox"
@@ -134,9 +134,33 @@ Important: Due to cross-origin security, there are some limitations:
    npm run package
    ```
 
-   This will create a production build in the `dist` directory and a ZIP file ready for the Chrome Web Store.
+   This will create a production build in the `dist` directory and a ZIP file ready for the Chrome Web Store (requires the `zip` command).
 
-   -> For Firefox, you need to 'mv firefox/manifest.json src/manifest.json' and then run the same command.
+### Building for Firefox (Add-on Reviewers)
+
+The extension uses webpack to bundle the modules in `src/utils/` into the content and background scripts, compile `popup.scss`, and minify the output. `src/manifest.json` is the Chrome manifest; `firefox/manifest.json` is the Firefox one (it uses `background.scripts` and `browser_specific_settings`).
+
+Requirements: Node.js 22 (tested with 22.18.0) and npm 10 (tested with 10.9.3), installed from [nodejs.org](https://nodejs.org/). Any OS works; tested on Windows 11.
+
+1. Replace the Chrome manifest with the Firefox manifest:
+
+   ```bash
+   cp firefox/manifest.json src/manifest.json
+   ```
+
+2. Install the exact dependency versions from `package-lock.json`:
+
+   ```bash
+   npm ci
+   ```
+
+3. Build:
+
+   ```bash
+   npm run build
+   ```
+
+The `dist` directory now contains the exact files of the submitted add-on. To restore the Chrome manifest afterwards, run `git checkout src/manifest.json`.
 
 ## Contributing
 
