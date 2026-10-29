@@ -427,9 +427,15 @@ async function startInstagramFeedObserver() {
   // Setup observer for Instagram feed scrolling
   console.log('[Content] Setting up Instagram feed observer');
   let article, scrollContainer;
-  while (!article) {
+  // Yield between polls: a synchronous loop here blocks Instagram's
+  // main thread before it can ever render the <article> we wait for
+  for (let attempts = 0; !article && attempts < 600; attempts++) {
     article = document.querySelector('article');
+    if (!article) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
+  if (!article) return;
   scrollContainer = article.parentElement;
   if (scrollContainer) {
     instagramFeedObserver = new MutationObserver(async () => {
